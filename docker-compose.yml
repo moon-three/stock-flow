@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  stock-online-app:
+    build:
+      context: stock-online
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - stock-network
+    depends_on:
+      - stock-db
+      - stock-redis
+
+  ## mysql
+  stock-db:
+    image: mysql:latest
+    container_name: stock-db
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - stock-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=stock
+      - MYSQL_USER=stock
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+  ## redis
+  stock-redis:
+    image: redis:7.4.2
+    container_name: stock-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - stock-network
+    volumes:
+      - redis-data:/var/lib/redis
+
+networks:
+  stock-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  redis-data:
