@@ -1,1 +1,2 @@
 rootProject.name = 'stock-flow'
+include('stock-common', 'stock-core', 'stock-domain', 'stock-online')
