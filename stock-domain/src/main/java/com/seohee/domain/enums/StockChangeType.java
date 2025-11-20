@@ -1,6 +1,6 @@
 package com.seohee.domain.enums;
 
-public enum ChangeReason {
+public enum StockChangeType {
     INIT,
     ORDER,
     CANCEL,

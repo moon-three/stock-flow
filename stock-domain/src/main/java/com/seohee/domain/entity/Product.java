@@ -1,6 +1,10 @@
 package com.seohee.domain.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +18,7 @@ public class Product extends BaseEntity {
     private String name;
     private Long price;
     private String description;
-    private boolean is_deleted;
+    private boolean isDeleted;
 
-    private LocalDateTime deleted_at;
+    private LocalDateTime deletedAt;
 }
