@@ -24,6 +24,7 @@ public class OrderDto {
     ) {}
 
     public record OrderProductInfo(
+            Long productId,
             String productName,
             Long quantity,
             Long unitPrice,

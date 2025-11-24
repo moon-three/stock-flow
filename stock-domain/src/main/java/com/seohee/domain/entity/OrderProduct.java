@@ -32,13 +32,13 @@ public class OrderProduct {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    private Long quantity;
-    private Long unitPrice;
+    private long quantity;
+    private long unitPrice;
 
-    private Long subTotal;
+    private long subTotal;
 
     public static OrderProduct from(
-            Product product, Long quantity, Long unitPrice) {
+            Product product, long quantity, long unitPrice) {
         return OrderProduct.builder()
                 .product(product)
                 .quantity(quantity)

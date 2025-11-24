@@ -1,7 +1,7 @@
 package com.seohee.common.dto;
 
 public enum DeliveryTypeRequest {
-    NORMAL,
+    ONLINE,
     TODAY_DELIVERY,
     PICKUP
 }

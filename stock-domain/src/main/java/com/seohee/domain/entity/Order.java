@@ -36,7 +36,7 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderProduct> orderProducts;
 
-    private Long totalAmount;
+    private long totalAmount;
 
     @Enumerated(EnumType.STRING)
     private DeliveryType deliveryType;
@@ -64,10 +64,4 @@ public class Order extends BaseEntity {
         this.totalAmount = calculated;
     }
 
-    // 프론트 쪽에서 계산해서 넘겨준 totalAmount와 엔티티에 저장할 totalAmount가 일치하는지 확인
-    public void checkTotalAmount(Long totalAmount) {
-        if(!this.totalAmount.equals(totalAmount)) {
-            throw new RuntimeException("주문 총 합계금액을 확인해주세요.");
-        }
-    }
 }

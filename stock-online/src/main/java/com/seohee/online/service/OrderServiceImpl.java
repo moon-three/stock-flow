@@ -2,16 +2,28 @@ package com.seohee.online.service;
 
 import com.seohee.common.dto.OrderDto;
 import com.seohee.common.dto.DeliveryTypeRequest;
+import com.seohee.common.exception.DeliveryTypeNotSelectedException;
+import com.seohee.common.exception.ProductNotExistException;
+import com.seohee.common.exception.StockNotEnoughException;
+import com.seohee.common.exception.StockNotFoundException;
+import com.seohee.common.exception.TotalAmountMismatchException;
+import com.seohee.common.exception.UserNotFoundException;
 import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
+import com.seohee.domain.entity.Stock;
+import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
+import com.seohee.domain.enums.StockChangeType;
 import com.seohee.online.repository.OrderRepository;
 import com.seohee.online.repository.ProductRepository;
+import com.seohee.online.repository.StockLogRepository;
+import com.seohee.online.repository.StockRepository;
 import com.seohee.online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,7 +34,10 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final StockRepository stockRepository;
+    private final StockLogRepository stockLogRepository;
 
+    @Transactional
     @Override
     public OrderDto.OrderResponse placeOrder(OrderDto.OrderRequest orderRequest) {
         User user = getUser(orderRequest.userId());
@@ -32,25 +47,23 @@ public class OrderServiceImpl implements OrderService {
 
         addProductsToOrder(orderRequest.orderProducts(), order);
 
-        // totalAmount
         order.calculateTotalAmount();
-        order.checkTotalAmount(orderRequest.totalAmount());
+        checkTotalAmount(order.getTotalAmount(), orderRequest.totalAmount());
 
-        // Order save (with OrderProduct)
         orderRepository.save(order);
-
 
         return toOrderResponse(order);
     }
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("찾을 수 없는 사용자입니다."));
+                .orElseThrow(() -> new UserNotFoundException());
     }
 
+    // request의 enum객체를 entity의 enum객체로 변환
     private DeliveryType toDomain(DeliveryTypeRequest dtReq) {
         if(dtReq == null) {
-            throw new RuntimeException("배송 방식을 선택해주세요.");
+            throw new DeliveryTypeNotSelectedException();
         }
         return DeliveryType.valueOf(dtReq.name());
     }
@@ -60,18 +73,24 @@ public class OrderServiceImpl implements OrderService {
         for(OrderDto.OrderProductRequest opReq : products) {
             Long productId = opReq.productId();
             Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new RuntimeException(
-                            "존재하지 않거나 삭제된 상품입니다."));
-            Long quantity = opReq.quantity();
-            Long unitPrice = opReq.unitPrice();
+                    .orElseThrow(() -> new ProductNotExistException());
+            long quantity = opReq.quantity();
+            long unitPrice = opReq.unitPrice();
 
-            OrderProduct orderProduct = OrderProduct.from(
-                    product, quantity, unitPrice);
-
+            OrderProduct orderProduct = OrderProduct.from(product, quantity, unitPrice);
             order.addOrderProducts(orderProduct);
 
-            // TODO
-            // OrderType check general: warehouseStock / today-pickup: storeStock
+            // 재고 차감 (일단 온라인배송인 경우만 구현)
+            if(order.getDeliveryType() == DeliveryType.ONLINE) {
+                decreaseStock(productId, quantity);
+            }
+        }
+    }
+
+    // 프론트 쪽에서 계산해서 넘겨준 totalAmount와 엔티티에 저장할 totalAmount가 일치하는지 확인
+    public void checkTotalAmount(long totalAmount, long requestTotalAmount) {
+        if(totalAmount != requestTotalAmount) {
+            throw new TotalAmountMismatchException();
         }
     }
 
@@ -79,6 +98,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDto.OrderProductInfo> orderProductInfos = order.getOrderProducts()
                 .stream()
                 .map( op -> new OrderDto.OrderProductInfo(
+                            op.getProduct().getId(),
                             op.getProduct().getName(),
                             op.getQuantity(),
                             op.getUnitPrice(),
@@ -93,5 +113,18 @@ public class OrderServiceImpl implements OrderService {
                 orderProductInfos,
                 order.getTotalAmount()
         );
+    }
+
+    private void decreaseStock(Long productId, long quantity) {
+        Stock stock = stockRepository.findByProductId(productId)
+                .orElseThrow(() -> new StockNotFoundException());
+
+        if(stock.getQuantity() < quantity) {
+            throw new StockNotEnoughException();
+        }
+        stock.decreaseQuantity(quantity);
+
+        StockLog stockLog = StockLog.from(stock, quantity, StockChangeType.ORDER);
+        stockLogRepository.save(stockLog);
     }
 }

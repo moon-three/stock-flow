@@ -43,4 +43,8 @@ public class Stock {
     public boolean isSoldOut() {
         return this.quantity <= 0;
     }
+
+    public void decreaseQuantity(long quantity) {
+        this.quantity -= quantity;
+    }
 }
