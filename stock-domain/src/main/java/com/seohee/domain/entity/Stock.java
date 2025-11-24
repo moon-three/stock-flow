@@ -34,8 +34,13 @@ public class Stock {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    private Long quantity;
+    @Builder.Default
+    private long quantity = 0;
 
     @LastModifiedDate
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
+
+    public boolean isSoldOut() {
+        return this.quantity <= 0;
+    }
 }

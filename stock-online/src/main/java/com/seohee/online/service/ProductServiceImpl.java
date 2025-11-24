@@ -2,7 +2,9 @@ package com.seohee.online.service;
 
 import com.seohee.common.dto.ProductDto;
 import com.seohee.domain.entity.Product;
+import com.seohee.domain.entity.Stock;
 import com.seohee.online.repository.ProductRepository;
+import com.seohee.online.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final StockRepository stockRepository;
 
     @Transactional(readOnly = true)
     @Override
@@ -22,7 +25,9 @@ public class ProductServiceImpl implements ProductService {
 
         return products.stream()
                 .map(product -> {
-                    boolean isSoldOut = product.isSoldOut();
+                    Stock stock = stockRepository.findByProductId(product.getId())
+                            .orElseThrow(() -> new RuntimeException("내부 서버 오류 : 관리자 문의"));
+                    boolean isSoldOut = stock.isSoldOut();
 
                     return new ProductDto.ProductResponse(
                             product.getId(),
@@ -42,7 +47,10 @@ public class ProductServiceImpl implements ProductService {
         if(product.isDeleted()) {
             throw new RuntimeException("존재하지 않거나 삭제된 상품입니다.");
         }
-        boolean isSoldOut = product.isSoldOut();
+
+        Stock stock = stockRepository.findByProductId(product.getId())
+                .orElseThrow(() -> new RuntimeException("내부 서버 오류 : 관리자 문의"));;
+        boolean isSoldOut = stock.isSoldOut();
 
         return new ProductDto.ProductDetailResponse(
                 product.getId(),
