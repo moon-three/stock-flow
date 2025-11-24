@@ -4,7 +4,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,17 +23,10 @@ public class Product extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "product")
-    private Stock stock;
-
     private String name;
     private Long price;
     private String description;
     private boolean isDeleted;
 
     private LocalDateTime deletedAt;
-
-    public boolean isSoldOut() {
-        return this.stock.getQuantity() <= 0;
-    }
 }

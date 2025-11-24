@@ -1,8 +1,12 @@
 package com.seohee.online.service;
 
 import com.seohee.common.dto.ProductDto;
+import com.seohee.common.exception.ProductNotExistException;
+import com.seohee.common.exception.StockNotFoundException;
 import com.seohee.domain.entity.Product;
+import com.seohee.domain.entity.Stock;
 import com.seohee.online.repository.ProductRepository;
+import com.seohee.online.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +18,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final StockRepository stockRepository;
 
     @Transactional(readOnly = true)
     @Override
@@ -22,7 +27,9 @@ public class ProductServiceImpl implements ProductService {
 
         return products.stream()
                 .map(product -> {
-                    boolean isSoldOut = product.isSoldOut();
+                    Stock stock = stockRepository.findByProductId(product.getId())
+                            .orElseThrow(() -> new StockNotFoundException());
+                    boolean isSoldOut = stock.isSoldOut();
 
                     return new ProductDto.ProductResponse(
                             product.getId(),
@@ -38,11 +45,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto.ProductDetailResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("존재하지 않거나 삭제된 상품입니다."));
+                .orElseThrow(() -> new ProductNotExistException());
         if(product.isDeleted()) {
-            throw new RuntimeException("존재하지 않거나 삭제된 상품입니다.");
+            throw new ProductNotExistException();
         }
-        boolean isSoldOut = product.isSoldOut();
+
+        Stock stock = stockRepository.findByProductId(product.getId())
+                .orElseThrow(() -> new StockNotFoundException());;
+        boolean isSoldOut = stock.isSoldOut();
 
         return new ProductDto.ProductDetailResponse(
                 product.getId(),
