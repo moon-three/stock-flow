@@ -9,6 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -17,6 +21,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "stocks")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,8 +34,13 @@ public class Stock {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    private Long quantity;
+    @Builder.Default
+    private long quantity = 0;
 
     @LastModifiedDate
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
+
+    public boolean isSoldOut() {
+        return this.quantity <= 0;
+    }
 }

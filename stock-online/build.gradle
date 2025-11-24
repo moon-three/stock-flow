@@ -7,6 +7,7 @@ bootJar.enabled = true
 
 dependencies {
     implementation project(':stock-domain')
+    implementation project(':stock-common')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5-jakarta'
