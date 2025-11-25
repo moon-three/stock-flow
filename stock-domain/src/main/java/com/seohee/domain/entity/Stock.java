@@ -47,4 +47,8 @@ public class Stock {
     public void decreaseQuantity(long quantity) {
         this.quantity -= quantity;
     }
+
+    public void increaseQuantity(long quantity) {
+        this.quantity += quantity;
+    }
 }

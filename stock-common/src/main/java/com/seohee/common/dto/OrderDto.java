@@ -12,22 +12,24 @@ public class OrderDto {
     ) {}
 
     public record OrderProductRequest(
-        Long productId, Long quantity, Long unitPrice
+        Long productId,
+        Long quantity,
+        Long unitPrice
     ) {}
 
-    public record OrderResponse(
+    public record OrderDetailResponse(
         Long orderId,
         String orderStatus,
         String deliveryType,
         List<OrderProductInfo> orderProductInfos,
-        Long totalAmount
+        long totalAmount
     ) {}
 
     public record OrderProductInfo(
-            Long productId,
-            String productName,
-            Long quantity,
-            Long unitPrice,
-            Long subTotal
+        Long productId,
+        String productName,
+        Long quantity,
+        Long unitPrice,
+        Long subTotal
     ) {}
 }

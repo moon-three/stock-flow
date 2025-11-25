@@ -3,6 +3,7 @@ package com.seohee.online.service;
 import com.seohee.common.dto.OrderDto;
 import com.seohee.common.dto.DeliveryTypeRequest;
 import com.seohee.common.exception.DeliveryTypeNotSelectedException;
+import com.seohee.common.exception.OrderNotExistException;
 import com.seohee.common.exception.ProductNotExistException;
 import com.seohee.common.exception.StockNotEnoughException;
 import com.seohee.common.exception.StockNotFoundException;
@@ -39,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public OrderDto.OrderResponse placeOrder(OrderDto.OrderRequest orderRequest) {
+    public OrderDto.OrderDetailResponse placeOrder(OrderDto.OrderRequest orderRequest) {
         User user = getUser(orderRequest.userId());
         DeliveryType deliveryType = toDomain(orderRequest.deliveryTypeRequest());
 
@@ -52,7 +53,20 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(order);
 
-        return toOrderResponse(order);
+        return toOrderDetailResponse(order);
+    }
+
+    @Override
+    public OrderDto.OrderDetailResponse cancelOrder(Long orderId, Long userId) {
+        User user = getUser(userId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotExistException());
+
+        restoreStockForOrder(order);
+
+        order.changeOrderStatusToCancel();
+
+        return toOrderDetailResponse(order);
     }
 
     private User getUser(Long userId) {
@@ -94,27 +108,6 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private OrderDto.OrderResponse toOrderResponse(Order order) {
-        List<OrderDto.OrderProductInfo> orderProductInfos = order.getOrderProducts()
-                .stream()
-                .map( op -> new OrderDto.OrderProductInfo(
-                            op.getProduct().getId(),
-                            op.getProduct().getName(),
-                            op.getQuantity(),
-                            op.getUnitPrice(),
-                            op.getSubTotal()
-                           )
-                ).toList();
-
-        return new OrderDto.OrderResponse(
-                order.getId(),
-                order.getOrderStatus().name(),
-                order.getDeliveryType().name(),
-                orderProductInfos,
-                order.getTotalAmount()
-        );
-    }
-
     private void decreaseStock(Long productId, long quantity) {
         Stock stock = stockRepository.findByProductId(productId)
                 .orElseThrow(() -> new StockNotFoundException());
@@ -126,5 +119,40 @@ public class OrderServiceImpl implements OrderService {
 
         StockLog stockLog = StockLog.from(stock, quantity, StockChangeType.ORDER);
         stockLogRepository.save(stockLog);
+    }
+
+    private void restoreStockForOrder(Order order) {
+        for(OrderProduct op : order.getOrderProducts()) {
+            Stock stock = stockRepository.findByProductId(op.getProduct().getId())
+                    .orElseThrow(() -> new StockNotFoundException());
+
+            long cancelQuantity = op.getQuantity();
+
+            stock.increaseQuantity(cancelQuantity);
+
+            StockLog stockLog = StockLog.from(stock, cancelQuantity, StockChangeType.CANCEL);
+            stockLogRepository.save(stockLog);
+        }
+    }
+
+    private OrderDto.OrderDetailResponse toOrderDetailResponse(Order order) {
+        List<OrderDto.OrderProductInfo> orderProductInfos = order.getOrderProducts()
+                .stream()
+                .map( op -> new OrderDto.OrderProductInfo(
+                                op.getProduct().getId(),
+                                op.getProduct().getName(),
+                                op.getQuantity(),
+                                op.getUnitPrice(),
+                                op.getSubTotal()
+                        )
+                ).toList();
+
+        return new OrderDto.OrderDetailResponse(
+                order.getId(),
+                order.getOrderStatus().name(),
+                order.getDeliveryType().name(),
+                orderProductInfos,
+                order.getTotalAmount()
+        );
     }
 }

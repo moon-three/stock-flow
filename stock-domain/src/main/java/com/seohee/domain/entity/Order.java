@@ -64,4 +64,7 @@ public class Order extends BaseEntity {
         this.totalAmount = calculated;
     }
 
+    public void changeOrderStatusToCancel() {
+        this.orderStatus = OrderStatus.CANCEL;
+    }
 }
