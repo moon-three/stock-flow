@@ -56,6 +56,7 @@ public class OrderServiceImpl implements OrderService {
         return toOrderDetailResponse(order);
     }
 
+    @Transactional
     @Override
     public OrderDto.OrderDetailResponse cancelOrder(Long orderId, Long userId) {
         User user = getUser(userId);
