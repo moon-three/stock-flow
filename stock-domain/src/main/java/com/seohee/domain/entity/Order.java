@@ -51,17 +51,12 @@ public class Order extends BaseEntity {
         this.orderStatus = OrderStatus.SUCCESS;     // 동기로 처리할때는 바로 SUCCESS
     }
 
-    public void addOrderProducts(OrderProduct orderProduct) {
+    // 주문한 상품 추가 + totalAmount 계산
+    public void addOrderProduct(OrderProduct orderProduct) {
         orderProducts.add(orderProduct);
         orderProduct.setOrder(this);
-    }
 
-    public void calculateTotalAmount() {
-        long calculated = 0;
-        for(OrderProduct orderProduct : orderProducts) {
-            calculated += orderProduct.getSubTotal();
-        }
-        this.totalAmount = calculated;
+        this.totalAmount += orderProduct.getSubTotal();
     }
 
     public void changeOrderStatusToCancel() {
