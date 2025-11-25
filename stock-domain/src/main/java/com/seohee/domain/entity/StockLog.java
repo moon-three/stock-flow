@@ -33,7 +33,7 @@ public class StockLog {
     @JoinColumn(name = "stock_id")
     private Stock stock;
 
-    private long changeQuantity;
+    private long quantityChange;
 
     @Enumerated(EnumType.STRING)
     private StockChangeType stockChangeType;
@@ -46,7 +46,7 @@ public class StockLog {
                                 StockChangeType stockChangeType) {
         return StockLog.builder()
                 .stock(stock)
-                .changeQuantity(changeQuantity)
+                .quantityChange(changeQuantity)
                 .stockChangeType(stockChangeType)
                 .build();
     }

@@ -1,7 +1,7 @@
 package com.seohee.online.service;
 
-import com.seohee.common.dto.OrderDto;
 import com.seohee.common.dto.DeliveryTypeRequest;
+import com.seohee.common.dto.OrderDto;
 import com.seohee.common.exception.DeliveryTypeNotSelectedException;
 import com.seohee.common.exception.OrderNotExistException;
 import com.seohee.common.exception.ProductNotExistException;
@@ -127,11 +127,11 @@ public class OrderServiceImpl implements OrderService {
             Stock stock = stockRepository.findByProductId(op.getProduct().getId())
                     .orElseThrow(() -> new StockNotFoundException());
 
-            long cancelQuantity = op.getQuantity();
+            long quantityToCancel = op.getQuantity();
 
-            stock.increaseQuantity(cancelQuantity);
+            stock.increaseQuantity(quantityToCancel);
 
-            StockLog stockLog = StockLog.from(stock, cancelQuantity, StockChangeType.CANCEL);
+            StockLog stockLog = StockLog.from(stock, quantityToCancel, StockChangeType.CANCEL);
             stockLogRepository.save(stockLog);
         }
     }
