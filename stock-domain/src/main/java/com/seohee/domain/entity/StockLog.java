@@ -11,6 +11,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -18,6 +21,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StockLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +33,21 @@ public class StockLog {
     @JoinColumn(name = "stock_id")
     private Stock stock;
 
-    private Long changeEntity;
+    private long quantityChange;
 
     @Enumerated(EnumType.STRING)
     private StockChangeType stockChangeType;
 
     @LastModifiedDate
     private LocalDateTime updated_at;
+
+    public static StockLog from(Stock stock,
+                                long changeQuantity,
+                                StockChangeType stockChangeType) {
+        return StockLog.builder()
+                .stock(stock)
+                .quantityChange(changeQuantity)
+                .stockChangeType(stockChangeType)
+                .build();
+    }
 }

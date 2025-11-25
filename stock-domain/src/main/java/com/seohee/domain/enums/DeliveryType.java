@@ -1,7 +1,7 @@
 package com.seohee.domain.enums;
 
-public enum OrderType {
-    NORMAL,
+public enum DeliveryType {
+    ONLINE,
     TODAY_DELIVERY,
     PICKUP
 }

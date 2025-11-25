@@ -11,7 +11,7 @@
 - chore: 빌드/설정 변경
 - doc: 문서 작성/수정
 - test: 테스트 작성/수정
-- fix: 버그 수정
+- fix: 버그 수정 / 누락된 기능 수정
 
 ## 3. PR 작성
 - [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) 참고
