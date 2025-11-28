@@ -7,14 +7,14 @@ public class OrderDto {
     public record OrderRequest(
         Long userId,
         List<OrderProductRequest> orderProducts,
-        Long totalAmount,
+        long totalAmount,
         DeliveryTypeRequest deliveryTypeRequest
     ) {}
 
     public record OrderProductRequest(
         Long productId,
-        Long quantity,
-        Long unitPrice
+        long quantity,
+        long unitPrice
     ) {}
 
     public record OrderDetailResponse(
@@ -28,8 +28,8 @@ public class OrderDto {
     public record OrderProductInfo(
         Long productId,
         String productName,
-        Long quantity,
-        Long unitPrice,
-        Long subTotal
+        long quantity,
+        long unitPrice,
+        long subTotal
     ) {}
 }
