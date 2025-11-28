@@ -33,7 +33,7 @@ public class Product extends BaseEntity {
 
     @NotNull
     @PositiveOrZero
-    private Long price;
+    private long price;
 
     @NotNull
     @Size(max = 255)
