@@ -44,11 +44,11 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    public Order(User user, DeliveryType deliveryType) {
+    public Order(User user, DeliveryType deliveryType, OrderStatus orderStatus) {
         this.user = user;
         this.deliveryType = deliveryType;
+        this.orderStatus = orderStatus;
         this.orderProducts = new ArrayList<>();
-        this.orderStatus = OrderStatus.SUCCESS;     // 동기로 처리할때는 바로 SUCCESS
     }
 
     // 주문한 상품 추가 + totalAmount 계산
