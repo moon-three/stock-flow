@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,31 +24,35 @@ public class DataInitService {
 
     public void init() {
         log.info("데이터 초기화 시작");
+
+        List<User> users = new ArrayList<>();
+        List<Product> products = new ArrayList<>();
+        List<Stock> stocks = new ArrayList<>();
+
         for(int i = 1; i <= 500; i++) {
-            User user = User.builder()
+            users.add(User.builder()
                     .name("user" + i)
                     .email("user" + i + "@gmail.com")
-                    .build();
-
-            userRepository.save(user);
+                    .build());
         }
+        userRepository.saveAll(users);
 
         for(int i = 1; i <= 10; i++) {
-            Product product = Product.builder()
+            products.add(Product.builder()
                     .name("상품" + i)
                     .price(1000)
                     .description("상품" + i)
-                    .build();
+                    .build());
+        }
+        productRepository.saveAll(products);
 
-            productRepository.save(product);
-
-            Stock stock = Stock.builder()
+        for(Product product : products) {
+            stocks.add(Stock.builder()
                     .product(product)
                     .quantity(500000)
-                    .build();
-
-            stockRepository.save(stock);
+                    .build());
         }
-    }
 
+        stockRepository.saveAll(stocks);
+    }
 }
