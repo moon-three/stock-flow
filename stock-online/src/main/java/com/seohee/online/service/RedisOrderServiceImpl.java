@@ -12,6 +12,8 @@ import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
 import com.seohee.domain.enums.OrderStatus;
 import com.seohee.online.redis.RedisService;
+import com.seohee.online.redis.StockDecreaseMessage;
+import com.seohee.online.redis.StockDecreasePublisher;
 import com.seohee.online.repository.OrderRepository;
 import com.seohee.online.repository.ProductRepository;
 import com.seohee.online.repository.UserRepository;
@@ -30,6 +32,7 @@ public class RedisOrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
 
     private final RedisService redisService;
+    private final StockDecreasePublisher stockDecreasePublisher;
 
     @Override
     public OrderDto.OrderDetailResponse placeOrder(OrderDto.OrderRequest orderRequest) {
@@ -54,9 +57,10 @@ public class RedisOrderServiceImpl implements OrderService {
             throw new StockNotEnoughException();
         }
 
-        // TODO : 성공하면 pub/sub (DB 재고 차감 + StockLog 생성)
-
         orderRepository.save(order);
+
+        StockDecreaseMessage messageDto = new StockDecreaseMessage(order.getId(), productMap);
+        stockDecreasePublisher.publishAsync(messageDto);
 
         return  toOrderDetailResponse(order);
     }

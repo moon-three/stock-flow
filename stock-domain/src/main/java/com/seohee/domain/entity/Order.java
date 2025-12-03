@@ -59,7 +59,15 @@ public class Order extends BaseEntity {
         this.totalAmount += orderProduct.getSubTotal();
     }
 
+    public void changeOrderStatusToSuccess() {
+        this.orderStatus = OrderStatus.SUCCESS;
+    }
+
     public void changeOrderStatusToCancel() {
         this.orderStatus = OrderStatus.CANCEL;
+    }
+
+    public void changeOrderStatusToFail() {
+        this.orderStatus = OrderStatus.FAIL;
     }
 }
