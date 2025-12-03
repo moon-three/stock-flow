@@ -40,7 +40,7 @@ public class DataInitService {
         for(int i = 1; i <= 10; i++) {
             products.add(Product.builder()
                     .name("상품" + i)
-                    .price(1000)
+                    .price(1000L)
                     .description("상품" + i)
                     .build());
         }
