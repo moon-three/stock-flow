@@ -40,7 +40,7 @@ public class Product extends BaseEntity {
     private String description;
 
     @Builder.Default
-    @ColumnDefault( "false")
+    @ColumnDefault("false")
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;

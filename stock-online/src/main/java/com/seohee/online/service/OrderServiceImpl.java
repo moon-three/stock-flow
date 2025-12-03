@@ -107,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void decreaseStockForOrderProduct(Long productId, long quantity) {
-        Stock stock = stockRepository.findByProductId(productId)
+        Stock stock = stockRepository.findByProductForDecreasing(productId)
                 .orElseThrow(() -> new StockNotFoundException());
 
         if(stock.getQuantity() < quantity) {
