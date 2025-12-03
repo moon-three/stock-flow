@@ -33,14 +33,14 @@ public class Product extends BaseEntity {
 
     @NotNull
     @PositiveOrZero
-    private long price;
+    private Long price;
 
     @NotNull
     @Size(max = 255)
     private String description;
 
     @Builder.Default
-    @ColumnDefault( "false")
+    @ColumnDefault("false")
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;
