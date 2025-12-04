@@ -1,6 +1,7 @@
 package com.seohee.online.service;
 
 import com.seohee.common.dto.OrderDto;
+import com.seohee.common.exception.RedisOperationException;
 import com.seohee.common.exception.StockNotEnoughException;
 import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.OrderProduct;
@@ -70,7 +71,11 @@ public class RedisOrderServiceImpl implements OrderService {
 
         Map<Long, Long> productMap = toProductMap(order);
         // Redis 재고 복구
-        redisService.restoreStockInRedis(productMap);
+        boolean isSuccess = redisService.restoreStockInRedis(productMap);
+        if(!isSuccess) {
+            throw new RedisOperationException();
+        }
+
         // pub으로 DB 재고 증가 + stockLog 생성
         StockRestoreMessage messageDto = new StockRestoreMessage(orderId, productMap);
         stockRestorePublisher.publishAsync(messageDto);

@@ -1,7 +1,7 @@
 package com.seohee.online.redis;
 
-import com.seohee.common.exception.RedisOperationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -11,6 +11,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -26,13 +27,13 @@ public class RedisService {
 
         String luaScript = getLuaScriptForDecrease();
 
-        Long result = redisTemplate.execute(
+        long result = redisTemplate.execute(
                 new DefaultRedisScript<>(luaScript, Long.class),
                 keys,
                 (Object[]) quantities);
 
-        if(result == null) {
-            throw new RedisOperationException();
+        if(result == -1) {
+            log.error("Redis 재고 차감 실패");
         }
 
         return result == 1L;
@@ -49,12 +50,16 @@ public class RedisService {
 
         String luaScript = getLuaScriptForRestore();
 
-        Long result = (Long) redisTemplate.execute(
+        long result = (Long) redisTemplate.execute(
                 new DefaultRedisScript<>(luaScript, Long.class),
                 keys,
                 (Object[]) quantities);
 
-        return result == 1L;
+        if(result == -1) {
+            log.error("Redis 재고 복구 실패");
+        }
+
+        return  result == 1L;
     }
 
     private String getLuaScriptForDecrease() {
@@ -73,7 +78,10 @@ public class RedisService {
                 end
                 
                 for i, key in ipairs(KEYS) do
-                    redis.call('DECRBY', key, ARGV[i])
+                    local value = redis.call('DECRBY', key, ARGV[i])
+                    if not value then
+                        return -1
+                    end
                 end
                 
                 return 1
@@ -83,7 +91,10 @@ public class RedisService {
     private String getLuaScriptForRestore() {
         return """
                 for i, key in ipairs(KEYS) do
-                    redis.call('INCRBY', key, ARGV[i])
+                    local value = redis.call('INCRBY', key, ARGV[i])
+                    if not value then
+                        return -1
+                    end
                 end
                 
                 return 1
