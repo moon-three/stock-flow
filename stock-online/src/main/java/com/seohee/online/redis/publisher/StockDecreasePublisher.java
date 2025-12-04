@@ -1,13 +1,13 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.publisher;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seohee.online.redis.dto.StockDecreaseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -27,7 +27,7 @@ public class StockDecreasePublisher {
                 String messageJson = objectMapper.writeValueAsString(messageDto);
                 redisPublisher.publish(stockDecreaseTopic, messageJson);
             } catch (JsonProcessingException e) {
-                log.error("Map -> JSON 변환 실패: {}", e.getMessage());
+                log.error("[StockDecrease] Map -> JSON 변환 실패: {}", e.getMessage());
             }
         }, customExecutor);
     }

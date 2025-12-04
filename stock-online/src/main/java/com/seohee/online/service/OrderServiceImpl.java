@@ -47,10 +47,9 @@ public class OrderServiceImpl implements OrderService {
         DeliveryType deliveryType = DeliveryType.valueOf(
                 orderRequest.deliveryTypeRequest().name());
 
+        Order order = new Order(user, deliveryType);
         // 동기로 처리할때는 바로 SUCCESS
-        OrderStatus orderStatus = OrderStatus.SUCCESS;
-
-        Order order = new Order(user, deliveryType, orderStatus);
+        order.changeOrderStatusToSuccess();
 
         addProductsToOrder(orderRequest.orderProducts(), order);
 

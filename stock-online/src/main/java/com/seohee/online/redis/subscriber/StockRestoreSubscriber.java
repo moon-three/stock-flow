@@ -1,4 +1,4 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.subscriber;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,8 @@ import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.enums.StockChangeType;
+import com.seohee.online.redis.RedisService;
+import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.repository.OrderRepository;
 import com.seohee.online.repository.StockLogRepository;
 import com.seohee.online.repository.StockRepository;
@@ -18,52 +20,48 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
-public class StockDecreaseSubscriber {
+@Slf4j
+public class StockRestoreSubscriber {
 
     private final ObjectMapper objectMapper;
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
     private final StockLogRepository stockLogRepository;
-
     private final RedisService redisService;
 
     @Transactional
     public void onMessage(String messageJson) {
         try {
-            StockDecreaseMessage messageDto = objectMapper.readValue(messageJson, StockDecreaseMessage.class);
+            StockRestoreMessage messageDto = objectMapper.readValue(messageJson, StockRestoreMessage.class);
 
             for(Map.Entry<Long, Long> entry : messageDto.productMap().entrySet()) {
                 Long productId = entry.getKey();
                 Long quantity = entry.getValue();
 
-                Stock stock = stockRepository.findByProductId(productId)
+                Stock stock =  stockRepository.findByProductId(productId)
                         .orElseThrow(() -> new StockNotFoundException());
 
-                int updatedRows = stockRepository.decreaseQuantity(productId, quantity);
-                if(updatedRows == 0) {
-                    log.error("subscriber: 재고 차감 실패");
+                int updateRows = stockRepository.increaseQuantity(productId, quantity);
+                if(updateRows == 0) {
+                    log.error("[stockRestore] subscriber : 재고 복구 실패");
                     redisService.restoreStockInRedis(messageDto.productMap());
-
-                    Order order = orderRepository.findById(messageDto.orderId())
-                            .orElseThrow(() -> new OrderNotExistException());
-                    order.changeOrderStatusToFail();
 
                     return;
                 }
 
-                StockLog stockLog = StockLog.from(stock, quantity, StockChangeType.ORDER);
+                StockLog stockLog = StockLog.from(stock, quantity, StockChangeType.CANCEL);
                 stockLogRepository.save(stockLog);
             }
             Order order = orderRepository.findById(messageDto.orderId())
                     .orElseThrow(() -> new OrderNotExistException());
-            order.changeOrderStatusToSuccess();
+            order.changeOrderStatusToCancel();
 
         } catch (JsonProcessingException e) {
-            log.error("JSON -> Map 변환 실패: {}", e.getMessage());
-            throw new RuntimeException(e);
+            log.error("[stockRestore] JSON -> Map 변환 실패: {}", e.getMessage());
         }
+
     }
+
 }

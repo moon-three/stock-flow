@@ -1,7 +1,8 @@
 package com.seohee.online.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.seohee.online.redis.StockDecreaseSubscriber;
+import com.seohee.online.redis.subscriber.StockDecreaseSubscriber;
+import com.seohee.online.redis.subscriber.StockRestoreSubscriber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,9 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.topic.stock-decrease}")
     private String stockDecreaseTopic;
+
+    @Value("${spring.data.redis.topic.stock-restore}")
+    private String stockRestoreTopic;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -56,18 +60,30 @@ public class RedisConfig {
     }
 
     @Bean
-    public MessageListenerAdapter listenerAdapter(StockDecreaseSubscriber subscriber) {
+    public ChannelTopic stockRestoreTopic() {
+        return new ChannelTopic(stockRestoreTopic);
+    }
+
+    @Bean
+    public MessageListenerAdapter stockDecreaseAdapter(StockDecreaseSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, "onMessage");
+    }
+
+    @Bean
+    public MessageListenerAdapter stockRestoreAdapter(StockRestoreSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "onMessage");
     }
 
     @Bean
     RedisMessageListenerContainer container(
-                            RedisConnectionFactory connectionFactory,
-                            MessageListenerAdapter listenerAdapter) {
+                                RedisConnectionFactory connectionFactory,
+                                MessageListenerAdapter stockDecreaseAdapter,
+                                MessageListenerAdapter stockRestoreAdapter) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-
         container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(listenerAdapter, stockDecreaseTopic());
+
+        container.addMessageListener(stockDecreaseAdapter, stockDecreaseTopic());
+        container.addMessageListener(stockRestoreAdapter, stockRestoreTopic());
 
         return container;
     }

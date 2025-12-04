@@ -1,4 +1,4 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.publisher;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

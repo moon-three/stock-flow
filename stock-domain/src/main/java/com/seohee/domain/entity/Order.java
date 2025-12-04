@@ -44,10 +44,9 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    public Order(User user, DeliveryType deliveryType, OrderStatus orderStatus) {
+    public Order(User user, DeliveryType deliveryType) {
         this.user = user;
         this.deliveryType = deliveryType;
-        this.orderStatus = orderStatus;
         this.orderProducts = new ArrayList<>();
     }
 
@@ -59,8 +58,16 @@ public class Order extends BaseEntity {
         this.totalAmount += orderProduct.getSubTotal();
     }
 
+    public void changeOrderStatusToOrderPending() {
+        this.orderStatus = OrderStatus.ORDER_PENDING;
+    }
+
     public void changeOrderStatusToSuccess() {
         this.orderStatus = OrderStatus.SUCCESS;
+    }
+
+    public void changeOrderStatusToCancelRequested() {
+        this.orderStatus = OrderStatus.CANCEL_REQUESTED;
     }
 
     public void changeOrderStatusToCancel() {
