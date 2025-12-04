@@ -15,6 +15,7 @@ import com.seohee.online.redis.publisher.StockDecreasePublisher;
 import com.seohee.online.redis.publisher.StockRestorePublisher;
 import com.seohee.online.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Profile("!test")
 @RequiredArgsConstructor
 public class RedisOrderServiceImpl implements OrderService {
 

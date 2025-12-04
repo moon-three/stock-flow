@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class OrderServiceImplTest {
 
     @Autowired
-    private OrderService orderService;
+    private OrderServiceImpl orderService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
