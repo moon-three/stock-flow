@@ -1,13 +1,8 @@
 package com.seohee.online.service;
 
 import com.seohee.common.dto.OrderDto;
-import com.seohee.common.exception.InvalidOrderStatusException;
-import com.seohee.common.exception.OrderNotExistException;
-import com.seohee.common.exception.ProductNotExistException;
 import com.seohee.common.exception.StockNotEnoughException;
 import com.seohee.common.exception.StockNotFoundException;
-import com.seohee.common.exception.TotalAmountMismatchException;
-import com.seohee.common.exception.UserNotFoundException;
 import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
@@ -15,13 +10,10 @@ import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
-import com.seohee.domain.enums.OrderStatus;
 import com.seohee.domain.enums.StockChangeType;
 import com.seohee.online.repository.OrderRepository;
-import com.seohee.online.repository.ProductRepository;
 import com.seohee.online.repository.StockLogRepository;
 import com.seohee.online.repository.StockRepository;
-import com.seohee.online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private final UserRepository userRepository;
-    private final ProductRepository productRepository;
+    private final OrderCommonService orderCommonService;
+
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
     private final StockLogRepository stockLogRepository;
@@ -41,7 +33,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public OrderDto.OrderDetailResponse placeOrder(OrderDto.OrderRequest orderRequest) {
-        User user = getUser(orderRequest.userId());
+        User user = orderCommonService.getUser(orderRequest.userId());
 
         // request의 enum객체를 entity의 enum객체로 변환
         DeliveryType deliveryType = DeliveryType.valueOf(
@@ -50,44 +42,32 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order(user, deliveryType);
         // 동기로 처리할때는 바로 SUCCESS
         order.changeOrderStatusToSuccess();
-
-        addProductsToOrder(orderRequest.orderProducts(), order);
-
-        checkTotalAmount(order.getTotalAmount(), orderRequest.totalAmount());
+        addProductsAndDecreaseStock(orderRequest.orderProducts(), order);
+        orderCommonService.validateTotalAmount(order.getTotalAmount(), orderRequest.totalAmount());
 
         orderRepository.save(order);
 
-        return toOrderDetailResponse(order);
+        return orderCommonService.toOrderDetailResponse(order);
     }
 
     @Transactional
     @Override
     public OrderDto.OrderDetailResponse cancelOrder(Long orderId, Long userId) {
-        User user = getUser(userId);
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotExistException());
+        Order order = orderCommonService.getSuccessOrder(orderId, userId);
 
-        if(order.getOrderStatus() != OrderStatus.SUCCESS) {
-            throw new InvalidOrderStatusException();
-        }
         restoreStockForOrder(order);
-
         order.changeOrderStatusToCancel();
 
-        return toOrderDetailResponse(order);
+        return orderCommonService.toOrderDetailResponse(order);
     }
 
-    private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException());
-    }
 
-    private void addProductsToOrder(
+    private void addProductsAndDecreaseStock(
                 List<OrderDto.OrderProductRequest> products, Order order) {
         for(OrderDto.OrderProductRequest opReq : products) {
             Long productId = opReq.productId();
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ProductNotExistException());
+            Product product = orderCommonService.getProduct(productId);
+
             long quantity = opReq.quantity();
             long unitPrice = opReq.unitPrice();
 
@@ -101,16 +81,8 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    // 프론트 쪽에서 계산해서 넘겨준 totalAmount와 엔티티에 저장할 totalAmount가 일치하는지 확인
-    public void checkTotalAmount(long totalAmount, long requestTotalAmount) {
-        if(totalAmount != requestTotalAmount) {
-            throw new TotalAmountMismatchException();
-        }
-    }
-
     private void decreaseStockForOrderProduct(Long productId, long quantity) {
-        Stock stock = stockRepository.findByProductForDecreasing(productId)
-                .orElseThrow(() -> new StockNotFoundException());
+        Stock stock = getStock(productId);
 
         if(stock.getQuantity() < quantity) {
             throw new StockNotEnoughException();
@@ -123,8 +95,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void restoreStockForOrder(Order order) {
         for(OrderProduct op : order.getOrderProducts()) {
-            Stock stock = stockRepository.findByProductId(op.getProduct().getId())
-                    .orElseThrow(() -> new StockNotFoundException());
+            Stock stock = getStock(op.getProduct().getId());
 
             long quantityToCancel = op.getQuantity();
 
@@ -135,24 +106,8 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private OrderDto.OrderDetailResponse toOrderDetailResponse(Order order) {
-        List<OrderDto.OrderProductInfo> orderProductInfos = order.getOrderProducts()
-                .stream()
-                .map( op -> new OrderDto.OrderProductInfo(
-                                op.getProduct().getId(),
-                                op.getProduct().getName(),
-                                op.getQuantity(),
-                                op.getUnitPrice(),
-                                op.getSubTotal()
-                        )
-                ).toList();
-
-        return new OrderDto.OrderDetailResponse(
-                order.getId(),
-                order.getOrderStatus().name(),
-                order.getDeliveryType().name(),
-                orderProductInfos,
-                order.getTotalAmount()
-        );
+    private Stock getStock(Long productId) {
+        return stockRepository.findByProductForDecreasing(productId)
+                .orElseThrow(() -> new StockNotFoundException());
     }
 }
