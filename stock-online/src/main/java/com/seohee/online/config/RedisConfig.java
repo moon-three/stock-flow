@@ -20,10 +20,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Profile("!test")
 public class RedisConfig {
 
-    @Value("${spring.redis.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.data.redis.port}")
     private int port;
 
     @Value("${spring.data.redis.topic.stock-decrease}")
@@ -38,15 +38,15 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
         // Key serializer
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         // Value serializer
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer();
-        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
 
         return redisTemplate;
     }

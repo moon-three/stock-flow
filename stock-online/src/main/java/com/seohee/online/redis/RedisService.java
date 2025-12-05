@@ -16,9 +16,11 @@ import java.util.Map;
 @Slf4j
 public class RedisService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public boolean decreaseStockInRedis(Map<Long, Long> productMap) {
+        log.info("redis 재고 선차감 시작");
+
         List<String> keys = productMap.keySet().stream()
                 .map(id -> "stock:" + id)
                 .toList();
@@ -42,6 +44,8 @@ public class RedisService {
     }
 
     public boolean restoreStockInRedis(Map<Long, Long> productMap) {
+        log.info("redis 재고 선증가 시작");
+
         List<String> keys = productMap.keySet().stream()
                 .map(id -> "stock:" + id)
                 .toList();

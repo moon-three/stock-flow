@@ -25,7 +25,7 @@ public class DataInitService {
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public void init() {
         log.info("데이터 초기화 시작");
@@ -62,7 +62,7 @@ public class DataInitService {
         for (Stock s : stocks) {
             redisTemplate.opsForValue().set(
                     "stock:" + s.getProduct().getId(),
-                    s.getQuantity()
+                    s.getQuantity() + ""
             );
         }
 
