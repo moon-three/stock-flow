@@ -14,9 +14,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StockDecreaseSubscriber {
 
-    private final StockOrderService stockOrderService;
-
     private final ObjectMapper objectMapper;
+    private final StockOrderService stockOrderService;
 
     public void onMessage(String messageJson) {
         try {
@@ -24,7 +23,7 @@ public class StockDecreaseSubscriber {
             try {
                 stockOrderService.decreaseStockAndChangeOrderSuccess(messageDto);
             } catch (RuntimeException e) {
-                stockOrderService.restoreStockAndChangeOrderFail(messageDto);
+                stockOrderService.restoreCacheStockAndChangeOrderFail(messageDto);
             }
         } catch (JsonProcessingException e) {
             log.error("[stockDecrease] JSON -> Map 변환 실패: {}", e.getMessage());

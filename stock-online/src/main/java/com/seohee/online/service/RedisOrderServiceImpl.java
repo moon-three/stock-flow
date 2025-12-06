@@ -8,7 +8,7 @@ import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
-import com.seohee.online.redis.RedisService;
+import com.seohee.online.redis.StockCacheRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.redis.publisher.StockDecreasePublisher;
@@ -31,8 +31,8 @@ public class RedisOrderServiceImpl implements OrderService {
     private final OrderCommonService orderCommonService;
 
     private final OrderRepository orderRepository;
+    private final StockCacheRepository stockCacheRepository;
 
-    private final RedisService redisService;
     private final StockDecreasePublisher stockDecreasePublisher;
     private final StockRestorePublisher stockRestorePublisher;
 
@@ -52,7 +52,7 @@ public class RedisOrderServiceImpl implements OrderService {
 
         Map<Long, Long> productMap = toProductMap(order);
         // Redis 선차감
-        boolean isSuccess = redisService.decreaseStockInRedis(productMap);
+        boolean isSuccess = stockCacheRepository.decreaseStock(productMap);
         if(!isSuccess) {
             throw new StockNotEnoughException();
         }
@@ -73,7 +73,7 @@ public class RedisOrderServiceImpl implements OrderService {
 
         Map<Long, Long> productMap = toProductMap(order);
         // Redis 재고 복구
-        boolean isSuccess = redisService.restoreStockInRedis(productMap);
+        boolean isSuccess = stockCacheRepository.restoreStock(productMap);
         if(!isSuccess) {
             throw new RedisOperationException();
         }

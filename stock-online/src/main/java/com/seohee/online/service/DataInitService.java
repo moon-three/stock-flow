@@ -3,13 +3,13 @@ package com.seohee.online.service;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.User;
+import com.seohee.online.redis.RedisStockRepository;
 import com.seohee.online.repository.ProductRepository;
 import com.seohee.online.repository.StockRepository;
 import com.seohee.online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class DataInitService {
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisStockRepository redisStockRepository;
 
     public void init() {
         log.info("데이터 초기화 시작");
@@ -60,10 +60,7 @@ public class DataInitService {
         stockRepository.saveAll(stocks);
 
         for (Stock s : stocks) {
-            redisTemplate.opsForValue().set(
-                    "stock:" + s.getProduct().getId(),
-                    s.getQuantity() + ""
-            );
+            redisStockRepository.initStock(s);
         }
 
         log.info("데이터 초기화 완료");

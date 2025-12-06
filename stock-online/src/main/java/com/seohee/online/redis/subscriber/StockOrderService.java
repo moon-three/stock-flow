@@ -7,7 +7,7 @@ import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.enums.StockChangeType;
-import com.seohee.online.redis.RedisService;
+import com.seohee.online.redis.StockCacheRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.repository.OrderRepository;
@@ -27,7 +27,7 @@ import java.util.Map;
 @Slf4j
 public class StockOrderService {
 
-    private final RedisService redisService;
+    private final StockCacheRepository stockCacheRepository;
 
     private final StockRepository stockRepository;
     private final StockLogRepository stockLogRepository;
@@ -57,11 +57,11 @@ public class StockOrderService {
     }
 
     // redis 복구 & OrderStatus= Fail
-    public void restoreStockAndChangeOrderFail(StockDecreaseMessage messageDto) {
+    public void restoreCacheStockAndChangeOrderFail(StockDecreaseMessage messageDto) {
         Order order = orderRepository.findById(messageDto.orderId())
                 .orElseThrow(() -> new OrderNotExistException());
         order.changeOrderStatusToFail();
-        redisService.restoreStockInRedis(messageDto.productMap());
+        stockCacheRepository.restoreStock(messageDto.productMap());
     }
 
     @Transactional
@@ -85,5 +85,9 @@ public class StockOrderService {
         Order order = orderRepository.findById(messageDto.orderId())
                 .orElseThrow(() -> new OrderNotExistException());
         order.changeOrderStatusToCancel();
+    }
+
+    public void decreaseCacheStock(StockRestoreMessage messageDto) {
+        stockCacheRepository.decreaseStock(messageDto.productMap());
     }
 }
