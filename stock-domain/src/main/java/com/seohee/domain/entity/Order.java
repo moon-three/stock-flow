@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,6 +39,7 @@ public class Order extends BaseEntity {
 
     private long totalAmount;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private DeliveryType deliveryType;
 
@@ -48,7 +50,6 @@ public class Order extends BaseEntity {
         this.user = user;
         this.deliveryType = deliveryType;
         this.orderProducts = new ArrayList<>();
-        this.orderStatus = OrderStatus.SUCCESS;     // 동기로 처리할때는 바로 SUCCESS
     }
 
     // 주문한 상품 추가 + totalAmount 계산
@@ -59,7 +60,23 @@ public class Order extends BaseEntity {
         this.totalAmount += orderProduct.getSubTotal();
     }
 
+    public void changeOrderStatusToOrderPending() {
+        this.orderStatus = OrderStatus.ORDER_PENDING;
+    }
+
+    public void changeOrderStatusToSuccess() {
+        this.orderStatus = OrderStatus.SUCCESS;
+    }
+
+    public void changeOrderStatusToCancelRequested() {
+        this.orderStatus = OrderStatus.CANCEL_REQUESTED;
+    }
+
     public void changeOrderStatusToCancel() {
         this.orderStatus = OrderStatus.CANCEL;
+    }
+
+    public void changeOrderStatusToFail() {
+        this.orderStatus = OrderStatus.FAIL;
     }
 }

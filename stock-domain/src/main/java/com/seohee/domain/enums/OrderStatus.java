@@ -1,7 +1,9 @@
 package com.seohee.domain.enums;
 
 public enum OrderStatus {
-    PENDING,
+    ORDER_PENDING,
     SUCCESS,
-    CANCEL
+    CANCEL_REQUESTED,
+    CANCEL,
+    FAIL
 }

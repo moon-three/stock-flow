@@ -8,12 +8,15 @@ import com.seohee.online.repository.StockRepository;
 import com.seohee.online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Profile("!test")
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitService {
@@ -21,6 +24,8 @@ public class DataInitService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public void init() {
         log.info("데이터 초기화 시작");
@@ -52,7 +57,15 @@ public class DataInitService {
                     .quantity(500000)
                     .build());
         }
-
         stockRepository.saveAll(stocks);
+
+        for (Stock s : stocks) {
+            redisTemplate.opsForValue().set(
+                    "stock:" + s.getProduct().getId(),
+                    s.getQuantity()
+            );
+        }
+
+        log.info("데이터 초기화 완료");
     }
 }
