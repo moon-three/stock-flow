@@ -23,8 +23,8 @@ public class StockSyncScheduler {
     @Scheduled(cron = "${scheduler.stock-sync.cron}")
     public void stockSyncScheduling() {
         log.info("Redis 재고 동기화 시작");
-        List<Stock> deletedStocks = stockRepository.findAllDeletedStocks();
-        List<Stock> stocks = stockRepository.findAllValidStocks();
+        List<Stock> deletedStocks = stockRepository.findDeletedStocks();
+        List<Stock> stocks = stockRepository.findValidStocks();
 
         for(Stock stock : deletedStocks) {
             redisStockRepository.deleteStock(stock);
