@@ -1,4 +1,4 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.repository;
 
 import com.seohee.domain.entity.Stock;
 import lombok.RequiredArgsConstructor;
@@ -73,13 +73,16 @@ public class RedisStockRepository implements StockCacheRepository {
         return  result == 1L;
     }
 
-    public void initStock(Stock stock) {
+    public void setStock(Stock stock) {
         redisTemplate.opsForValue().set(
                 STOCK_KEY_PREFIX + stock.getProduct().getId(),
                 stock.getQuantity() + ""
         );
     }
 
+    public void deleteStock(Stock stock) {
+        redisTemplate.delete(STOCK_KEY_PREFIX + stock.getProduct().getId());
+    }
 
     private String getLuaScriptForDecrease() {
         return """

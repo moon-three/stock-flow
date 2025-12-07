@@ -7,7 +7,7 @@ import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.enums.StockChangeType;
-import com.seohee.online.redis.StockCacheRepository;
+import com.seohee.online.redis.repository.StockCacheRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.repository.OrderRepository;

@@ -8,11 +8,18 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface StockRepository extends JpaRepository<Stock, Long> {
     Optional<Stock> findByProductId(Long productId);
+
+    @Query("select s from Stock s where s.product.isDeleted = false")
+    List<Stock> findAllValidStocks();
+
+    @Query("select s from Stock s where s.product.isDeleted = true")
+    List<Stock> findAllDeletedStocks();
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Stock s where s.product.id = :productId")

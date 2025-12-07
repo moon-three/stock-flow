@@ -8,7 +8,7 @@ import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
-import com.seohee.online.redis.StockCacheRepository;
+import com.seohee.online.redis.repository.StockCacheRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.redis.publisher.StockDecreasePublisher;

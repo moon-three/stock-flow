@@ -2,7 +2,6 @@ package com.seohee.online.redis.subscriber;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.seohee.online.redis.StockCacheRepository;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

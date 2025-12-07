@@ -3,7 +3,7 @@ package com.seohee.online.service;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.User;
-import com.seohee.online.redis.RedisStockRepository;
+import com.seohee.online.redis.repository.RedisStockRepository;
 import com.seohee.online.repository.ProductRepository;
 import com.seohee.online.repository.StockRepository;
 import com.seohee.online.repository.UserRepository;
@@ -60,7 +60,7 @@ public class DataInitService {
         stockRepository.saveAll(stocks);
 
         for (Stock s : stocks) {
-            redisStockRepository.initStock(s);
+            redisStockRepository.setStock(s);
         }
 
         log.info("데이터 초기화 완료");

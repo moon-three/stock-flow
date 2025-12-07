@@ -1,4 +1,4 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.repository;
 
 import org.springframework.stereotype.Repository;
 
