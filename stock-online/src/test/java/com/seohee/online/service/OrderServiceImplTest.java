@@ -10,6 +10,7 @@ import com.seohee.domain.entity.User;
 import com.seohee.online.repository.ProductRepository;
 import com.seohee.online.repository.StockRepository;
 import com.seohee.online.repository.UserRepository;
+import com.seohee.online.service.order.OrderServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

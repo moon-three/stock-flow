@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.order;
 
 import com.seohee.common.dto.OrderDto;
 

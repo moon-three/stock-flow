@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.product;
 
 import com.seohee.common.dto.ProductDto;
 import com.seohee.common.exception.ProductNotExistException;
@@ -51,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Stock stock = stockRepository.findByProductId(product.getId())
-                .orElseThrow(() -> new StockNotFoundException());;
+                .orElseThrow(() -> new StockNotFoundException());
         boolean isSoldOut = stock.isSoldOut();
 
         return new ProductDto.ProductDetailResponse(

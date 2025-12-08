@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.product;
 
 import com.seohee.common.dto.ProductDto;
 import com.seohee.common.exception.ProductNotExistException;
@@ -8,6 +8,7 @@ import com.seohee.online.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class RedisProductServiceImpl implements ProductService {
     private final ProductCacheRepository productCacheRepository;
     private final ProductRepository productRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public List<ProductDto.ProductResponse> getAllProducts() {
         Map<Long, Long> productMap = productCacheRepository.findAllProducts();
@@ -45,6 +47,7 @@ public class RedisProductServiceImpl implements ProductService {
         return productResponses;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ProductDto.ProductDetailResponse getProductById(Long id) {
         Map<Long, Long> productMap = productCacheRepository.findProductById(id);

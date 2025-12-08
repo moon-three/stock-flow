@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.product;
 
 import com.seohee.common.dto.ProductDto;
 

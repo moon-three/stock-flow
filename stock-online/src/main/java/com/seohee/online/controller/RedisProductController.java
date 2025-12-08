@@ -1,7 +1,7 @@
 package com.seohee.online.controller;
 
 import com.seohee.common.dto.ProductDto;
-import com.seohee.online.service.RedisProductServiceImpl;
+import com.seohee.online.service.product.RedisProductServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;

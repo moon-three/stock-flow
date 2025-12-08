@@ -17,7 +17,6 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
     // 삭제되지 않은 상품의 재고들만 조회 (상품 정보 포함 x)
     @Query("select s from Stock s where s.product.isDeleted = false")
-    List<Stock> findAllValidStocks();
     List<Stock> findValidStocks();
 
     @Query("select s from Stock s where s.product.isDeleted = true")

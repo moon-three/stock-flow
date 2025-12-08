@@ -1,7 +1,7 @@
 package com.seohee.online.controller;
 
 import com.seohee.common.dto.OrderDto;
-import com.seohee.online.service.RedisOrderServiceImpl;
+import com.seohee.online.service.order.RedisOrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,7 @@
 package com.seohee.online.controller;
 
 import com.seohee.common.dto.OrderDto;
-import com.seohee.online.service.OrderServiceImpl;
+import com.seohee.online.service.order.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;

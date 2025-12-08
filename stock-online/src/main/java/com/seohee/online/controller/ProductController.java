@@ -1,7 +1,7 @@
 package com.seohee.online.controller;
 
 import com.seohee.common.dto.ProductDto;
-import com.seohee.online.service.ProductServiceImpl;
+import com.seohee.online.service.product.ProductServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
