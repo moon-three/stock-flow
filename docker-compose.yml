@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   stock-online-app:
+    container_name: stock-online-app
     build:
       context: stock-online
       dockerfile: Dockerfile
@@ -11,6 +12,10 @@ services:
       - stock-network
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=stock-redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_TOPIC_STOCK-DECREASE=stock-decrease
+      - SPRING_DATA_REDIS_TOPIC_STOCK-RESTORE=stock-restore
     depends_on:
       stock-db:
         condition: service_healthy
@@ -52,6 +57,7 @@ services:
 
 networks:
   stock-network:
+    name: stock-network
     driver: bridge
 
 volumes:

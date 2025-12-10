@@ -1,29 +1,35 @@
-package com.seohee.online.redis;
+package com.seohee.online.redis.repository;
 
+import com.seohee.domain.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
-@Service
-@Profile("!test")
-@RequiredArgsConstructor
 @Slf4j
-public class RedisService {
+@Profile("!test")
+@Repository
+@RequiredArgsConstructor
+public class RedisStockAdjustRepository implements StockAdjustRepository {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public boolean decreaseStockInRedis(Map<Long, Long> productMap) {
-        List<String> keys = productMap.keySet().stream()
-                .map(id -> "stock:" + id)
+    private final String STOCK_KEY_PREFIX = "stock:";
+
+    @Override
+    public boolean decreaseStock(Map<Long, Long> productQuantityMap) {
+        log.info("redis 재고 선차감 시작");
+
+        List<String> keys = productQuantityMap.keySet().stream()
+                .map(id -> STOCK_KEY_PREFIX + id)
                 .toList();
 
-        String[] quantities =  productMap.values().stream()
+        String[] quantities =  productQuantityMap.values().stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
@@ -41,18 +47,21 @@ public class RedisService {
         return result == 1L;
     }
 
-    public boolean restoreStockInRedis(Map<Long, Long> productMap) {
-        List<String> keys = productMap.keySet().stream()
-                .map(id -> "stock:" + id)
+    @Override
+    public boolean restoreStock(Map<Long, Long> productQuantityMap) {
+        log.info("redis 재고 선증가 시작");
+
+        List<String> keys = productQuantityMap.keySet().stream()
+                .map(id -> STOCK_KEY_PREFIX + id)
                 .toList();
 
-        String[] quantities =  productMap.values().stream()
+        String[] quantities =  productQuantityMap.values().stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
         String luaScript = getLuaScriptForRestore();
 
-        long result = (Long) redisTemplate.execute(
+        long result = redisTemplate.execute(
                 new DefaultRedisScript<>(luaScript, Long.class),
                 keys,
                 (Object[]) quantities);
@@ -62,6 +71,17 @@ public class RedisService {
         }
 
         return  result == 1L;
+    }
+
+    public void setStock(Stock stock) {
+        redisTemplate.opsForValue().set(
+                STOCK_KEY_PREFIX + stock.getProduct().getId(),
+                stock.getQuantity() + ""
+        );
+    }
+
+    public void deleteStock(Stock stock) {
+        redisTemplate.delete(STOCK_KEY_PREFIX + stock.getProduct().getId());
     }
 
     private String getLuaScriptForDecrease() {

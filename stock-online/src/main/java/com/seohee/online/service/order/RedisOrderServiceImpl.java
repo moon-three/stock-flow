@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.order;
 
 import com.seohee.common.dto.OrderDto;
 import com.seohee.common.exception.RedisOperationException;
@@ -8,7 +8,7 @@ import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
-import com.seohee.online.redis.RedisService;
+import com.seohee.online.redis.repository.StockAdjustRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
 import com.seohee.online.redis.publisher.StockDecreasePublisher;
@@ -31,8 +31,8 @@ public class RedisOrderServiceImpl implements OrderService {
     private final OrderCommonService orderCommonService;
 
     private final OrderRepository orderRepository;
+    private final StockAdjustRepository stockAdjustRepository;
 
-    private final RedisService redisService;
     private final StockDecreasePublisher stockDecreasePublisher;
     private final StockRestorePublisher stockRestorePublisher;
 
@@ -50,15 +50,15 @@ public class RedisOrderServiceImpl implements OrderService {
         addProducts(orderRequest.orderProducts(), order);
         orderCommonService.validateTotalAmount(order.getTotalAmount(), orderRequest.totalAmount());
 
-        Map<Long, Long> productMap = toProductMap(order);
+        Map<Long, Long> productQuantityMap = toProductQuantityMap(order);
         // Redis 선차감
-        boolean isSuccess = redisService.decreaseStockInRedis(productMap);
+        boolean isSuccess = stockAdjustRepository.decreaseStock(productQuantityMap);
         if(!isSuccess) {
             throw new StockNotEnoughException();
         }
         orderRepository.save(order);
         // pub으로 DB 재고 차감 + stockLog 생성
-        StockDecreaseMessage messageDto = new StockDecreaseMessage(order.getId(), productMap);
+        StockDecreaseMessage messageDto = new StockDecreaseMessage(order.getId(), productQuantityMap);
         stockDecreasePublisher.publishAsync(messageDto);
 
         return orderCommonService.toOrderDetailResponse(order);
@@ -71,15 +71,15 @@ public class RedisOrderServiceImpl implements OrderService {
 
         order.changeOrderStatusToCancelRequested();
 
-        Map<Long, Long> productMap = toProductMap(order);
+        Map<Long, Long> productQuantityMap = toProductQuantityMap(order);
         // Redis 재고 복구
-        boolean isSuccess = redisService.restoreStockInRedis(productMap);
+        boolean isSuccess = stockAdjustRepository.restoreStock(productQuantityMap);
         if(!isSuccess) {
             throw new RedisOperationException();
         }
 
         // pub으로 DB 재고 증가 + stockLog 생성
-        StockRestoreMessage messageDto = new StockRestoreMessage(orderId, productMap);
+        StockRestoreMessage messageDto = new StockRestoreMessage(orderId, productQuantityMap);
         stockRestorePublisher.publishAsync(messageDto);
 
         return orderCommonService.toOrderDetailResponse(order);
@@ -97,16 +97,16 @@ public class RedisOrderServiceImpl implements OrderService {
         }
     }
 
-    private Map<Long, Long> toProductMap(Order order) {
-        Map<Long, Long> productMap = new HashMap<>();
+    private Map<Long, Long> toProductQuantityMap(Order order) {
+        Map<Long, Long> productQuantityMap = new HashMap<>();
 
         for(OrderProduct op : order.getOrderProducts()) {
             Long productId = op.getProduct().getId();
             long quantity = op.getQuantity();
             // key : 주문한 상품ID, value : 주문수량
-            productMap.put(productId, quantity);
+            productQuantityMap.put(productId, quantity);
         }
 
-        return productMap;
+        return productQuantityMap;
     }
 }

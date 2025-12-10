@@ -1,4 +1,4 @@
-package com.seohee.online.service;
+package com.seohee.online.service.order;
 
 import com.seohee.common.dto.OrderDto;
 import com.seohee.common.exception.StockNotEnoughException;
@@ -60,7 +60,6 @@ public class OrderServiceImpl implements OrderService {
 
         return orderCommonService.toOrderDetailResponse(order);
     }
-
 
     private void addProductsAndDecreaseStock(
                 List<OrderDto.OrderProductRequest> products, Order order) {
