@@ -15,21 +15,21 @@ import java.util.Map;
 @Profile("!test")
 @Repository
 @RequiredArgsConstructor
-public class RedisStockRepository implements StockCacheRepository {
+public class RedisStockAdjustRepository implements StockAdjustRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 
     private final String STOCK_KEY_PREFIX = "stock:";
 
     @Override
-    public boolean decreaseStock(Map<Long, Long> productMap) {
+    public boolean decreaseStock(Map<Long, Long> productQuantityMap) {
         log.info("redis 재고 선차감 시작");
 
-        List<String> keys = productMap.keySet().stream()
+        List<String> keys = productQuantityMap.keySet().stream()
                 .map(id -> STOCK_KEY_PREFIX + id)
                 .toList();
 
-        String[] quantities =  productMap.values().stream()
+        String[] quantities =  productQuantityMap.values().stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
@@ -48,14 +48,14 @@ public class RedisStockRepository implements StockCacheRepository {
     }
 
     @Override
-    public boolean restoreStock(Map<Long, Long> productMap) {
+    public boolean restoreStock(Map<Long, Long> productQuantityMap) {
         log.info("redis 재고 선증가 시작");
 
-        List<String> keys = productMap.keySet().stream()
+        List<String> keys = productQuantityMap.keySet().stream()
                 .map(id -> STOCK_KEY_PREFIX + id)
                 .toList();
 
-        String[] quantities =  productMap.values().stream()
+        String[] quantities =  productQuantityMap.values().stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 

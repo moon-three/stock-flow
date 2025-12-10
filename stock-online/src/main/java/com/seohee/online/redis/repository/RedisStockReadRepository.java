@@ -14,7 +14,7 @@ import java.util.Map;
 @Repository
 @RequiredArgsConstructor
 @Profile("!test")
-public class RedisProductRepository implements ProductCacheRepository {
+public class RedisStockReadRepository implements StockReadRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -28,7 +28,7 @@ public class RedisProductRepository implements ProductCacheRepository {
             throw new RedisOperationException();
         }
 
-        Map<Long, Long> productMap = new HashMap<>();
+        Map<Long, Long> productQuantityMap = new HashMap<>();
         // Service에서 바로 데이터 사용할 수 있도록 하기 위해서
         // Redis key의 prefix 제거 후 Long으로 변환
         for(int i = 0; i < keys.size(); i++) {
@@ -36,11 +36,11 @@ public class RedisProductRepository implements ProductCacheRepository {
             if(value != null) {
                 long productId = Long.parseLong(keys.get(i).substring(STOCK_KEY_PREFIX.length()));
                 long quantity = Long.parseLong(values.get(i));
-                productMap.put(productId, quantity);
+                productQuantityMap.put(productId, quantity);
             }
         }
 
-        return productMap;
+        return productQuantityMap;
     }
 
     @Override
@@ -51,12 +51,12 @@ public class RedisProductRepository implements ProductCacheRepository {
             throw new RedisOperationException();
         }
 
-        Map<Long, Long> productMap = new HashMap<>();
+        Map<Long, Long> productQuantityMap = new HashMap<>();
 
         long productId = Long.parseLong(key.substring(STOCK_KEY_PREFIX.length()));
         long quantity = Long.parseLong(value);
-        productMap.put(productId, quantity);
+        productQuantityMap.put(productId, quantity);
 
-        return productMap;
+        return productQuantityMap;
     }
 }

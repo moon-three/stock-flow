@@ -1,7 +1,7 @@
 package com.seohee.online.scheduler;
 
 import com.seohee.domain.entity.Stock;
-import com.seohee.online.redis.repository.RedisStockRepository;
+import com.seohee.online.redis.repository.RedisStockAdjustRepository;
 import com.seohee.online.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.List;
 public class StockSyncScheduler {
 
     private final StockRepository stockRepository;
-    private final RedisStockRepository redisStockRepository;
+    private final RedisStockAdjustRepository redisStockAdjustRepository;
 
     @Scheduled(cron = "${scheduler.stock-sync.cron}")
     public void stockSyncScheduling() {
@@ -27,11 +27,11 @@ public class StockSyncScheduler {
         List<Stock> stocks = stockRepository.findValidStocks();
 
         for(Stock stock : deletedStocks) {
-            redisStockRepository.deleteStock(stock);
+            redisStockAdjustRepository.deleteStock(stock);
         }
 
         for(Stock stock : stocks) {
-            redisStockRepository.setStock(stock);
+            redisStockAdjustRepository.setStock(stock);
         }
         log.info("Redis 재고 동기화 끝");
     }
