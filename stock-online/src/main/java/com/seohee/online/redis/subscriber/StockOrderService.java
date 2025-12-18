@@ -7,9 +7,9 @@ import com.seohee.domain.entity.Order;
 import com.seohee.domain.entity.Stock;
 import com.seohee.domain.entity.StockLog;
 import com.seohee.domain.enums.StockChangeType;
-import com.seohee.online.redis.repository.StockAdjustRepository;
 import com.seohee.online.redis.dto.StockDecreaseMessage;
 import com.seohee.online.redis.dto.StockRestoreMessage;
+import com.seohee.online.redis.repository.StockAdjustRepository;
 import com.seohee.online.repository.OrderRepository;
 import com.seohee.online.repository.StockLogRepository;
 import com.seohee.online.repository.StockRepository;
@@ -35,7 +35,7 @@ public class StockOrderService {
 
     @Transactional
     public void decreaseStockAndChangeOrderSuccess(StockDecreaseMessage messageDto) {
-        for(Map.Entry<Long, Long> entry : messageDto.productMap().entrySet()) {
+        for(Map.Entry<Long, Long> entry : messageDto.productQuantityMap().entrySet()) {
             Long productId = entry.getKey();
             Long quantity = entry.getValue();
 
@@ -61,12 +61,12 @@ public class StockOrderService {
         Order order = orderRepository.findById(messageDto.orderId())
                 .orElseThrow(() -> new OrderNotExistException());
         order.changeOrderStatusToFail();
-        stockAdjustRepository.restoreStock(messageDto.productMap());
+        stockAdjustRepository.restoreStock(messageDto.productQuantityMap());
     }
 
     @Transactional
     public void increaseStockAndChangeOrderCancel(StockRestoreMessage messageDto) {
-        for(Map.Entry<Long, Long> entry : messageDto.productMap().entrySet()) {
+        for(Map.Entry<Long, Long> entry : messageDto.productQuantityMap().entrySet()) {
             Long productId = entry.getKey();
             Long quantity = entry.getValue();
 
@@ -88,6 +88,6 @@ public class StockOrderService {
     }
 
     public void decreaseCacheStock(StockRestoreMessage messageDto) {
-        stockAdjustRepository.decreaseStock(messageDto.productMap());
+        stockAdjustRepository.decreaseStock(messageDto.productQuantityMap());
     }
 }

@@ -15,6 +15,7 @@ import com.seohee.online.repository.OrderRepository;
 import com.seohee.online.repository.StockLogRepository;
 import com.seohee.online.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderCommonService orderCommonService;
@@ -81,13 +83,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void decreaseStockForOrderProduct(Long productId, long quantity) {
+        long start = System.currentTimeMillis();
         Stock stock = getStock(productId);
 
         if(stock.getQuantity() < quantity) {
             throw new StockNotEnoughException();
         }
         stock.decreaseQuantity(quantity);
-
+        long end = System.currentTimeMillis();
+        log.info("[DB] lock + decrease time: {} ms", end - start);
         StockLog stockLog = StockLog.from(stock, quantity, StockChangeType.ORDER);
         stockLogRepository.save(stockLog);
     }

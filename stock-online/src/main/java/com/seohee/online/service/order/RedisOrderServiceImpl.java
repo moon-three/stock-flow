@@ -8,13 +8,15 @@ import com.seohee.domain.entity.OrderProduct;
 import com.seohee.domain.entity.Product;
 import com.seohee.domain.entity.User;
 import com.seohee.domain.enums.DeliveryType;
-import com.seohee.online.redis.repository.StockAdjustRepository;
-import com.seohee.online.redis.dto.StockDecreaseMessage;
-import com.seohee.online.redis.dto.StockRestoreMessage;
+import com.seohee.online.event.OrderCanceledEvent;
+import com.seohee.online.event.OrderCreatedEvent;
 import com.seohee.online.redis.publisher.StockDecreasePublisher;
 import com.seohee.online.redis.publisher.StockRestorePublisher;
+import com.seohee.online.redis.repository.StockAdjustRepository;
 import com.seohee.online.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ import java.util.Map;
 @Service
 @Profile("!test")
 @RequiredArgsConstructor
+@Slf4j
 public class RedisOrderServiceImpl implements OrderService {
 
     private final OrderCommonService orderCommonService;
@@ -33,8 +36,7 @@ public class RedisOrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final StockAdjustRepository stockAdjustRepository;
 
-    private final StockDecreasePublisher stockDecreasePublisher;
-    private final StockRestorePublisher stockRestorePublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     @Override
@@ -52,14 +54,18 @@ public class RedisOrderServiceImpl implements OrderService {
 
         Map<Long, Long> productQuantityMap = toProductQuantityMap(order);
         // Redis 선차감
+        long start = System.currentTimeMillis();
         boolean isSuccess = stockAdjustRepository.decreaseStock(productQuantityMap);
+        long end = System.currentTimeMillis();
+        log.info("[Redis] stock decrease time: {} ms", end - start);
         if(!isSuccess) {
             throw new StockNotEnoughException();
         }
         orderRepository.save(order);
-        // pub으로 DB 재고 차감 + stockLog 생성
-        StockDecreaseMessage messageDto = new StockDecreaseMessage(order.getId(), productQuantityMap);
-        stockDecreasePublisher.publishAsync(messageDto);
+
+        // 주문 생성 이벤트 발행 (트랜잭션 커밋 이후 재고 차감 처리)
+        applicationEventPublisher.publishEvent(
+                new OrderCreatedEvent(order.getId(), productQuantityMap));
 
         return orderCommonService.toOrderDetailResponse(order);
     }
@@ -79,8 +85,9 @@ public class RedisOrderServiceImpl implements OrderService {
         }
 
         // pub으로 DB 재고 증가 + stockLog 생성
-        StockRestoreMessage messageDto = new StockRestoreMessage(orderId, productQuantityMap);
-        stockRestorePublisher.publishAsync(messageDto);
+        applicationEventPublisher.publishEvent(
+                new OrderCanceledEvent(order.getId(), productQuantityMap)
+        );
 
         return orderCommonService.toOrderDetailResponse(order);
     }
