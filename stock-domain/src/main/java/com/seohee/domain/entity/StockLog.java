@@ -1,6 +1,7 @@
 package com.seohee.domain.entity;
 
 import com.seohee.domain.enums.StockChangeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -14,7 +15,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -38,8 +39,9 @@ public class StockLog {
     @Enumerated(EnumType.STRING)
     private StockChangeType stockChangeType;
 
-    @LastModifiedDate
-    private LocalDateTime updated_at;
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     public static StockLog from(Stock stock,
                                 long changeQuantity,
